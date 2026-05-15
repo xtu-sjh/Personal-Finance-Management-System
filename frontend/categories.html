@@ -4,88 +4,85 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>分类管理 - 个人理财管理系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<nav class="navbar">
-  <div class="logo">个人<span>理财</span></div>
-  <ul class="nav-links">
-    <li><a href="dashboard.html">仪表盘</a></li>
-    <li><a href="statistics.html">统计分析</a></li>
-    <li><a href="records.html">记账管理</a></li>
-    <li><a href="budget.html">预算管理</a></li>
-    <li><a href="categories.html" class="active">分类管理</a></li>
-  </ul>
-  <div class="user-info">
-    <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
-    <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
-  </div>
-</nav>
+  <nav class="navbar">
+    <div class="logo"><span>个</span><span>人</span><span>理</span><span>财</span></div>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">仪表盘</a></li>
+      <li><a href="statistics.html">统计分析</a></li>
+      <li><a href="records.html">记账管理</a></li>
+      <li><a href="budget.html">预算管理</a></li>
+      <li><a href="categories.html" class="active">分类管理</a></li>
+    </ul>
+    <div class="user-info">
+      <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
+      <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+    </div>
+  </nav>
 
-<main class="container">
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">添加新分类</h2>
-    </div>
-    <div class="form-item">
-      <label for="newCategoryName">分类名称</label>
-      <input id="newCategoryName" type="text" placeholder="输入分类名称" maxlength="20">
-    </div>
-    <div class="form-item">
-      <label for="newCategoryType">分类类型</label>
-      <select id="newCategoryType">
-        <option value="expense">支出</option>
-        <option value="income">收入</option>
-      </select>
-    </div>
-    <button class="btn btn-success" id="addCategoryBtn">添加分类</button>
-  </div>
+  <main class="container">
+    <section class="page-hero">
+      <div>
+        <p class="eyebrow">分类管理</p>
+        <h1>自定义收支分类</h1>
+        <p class="page-subtitle">添加、编辑和删除收入与支出分类，让记账更加灵活。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="addCategoryBtn">+ 添加分类</button>
+      </div>
+    </section>
 
-  <div class="row">
-    <div class="col-6">
+    <div id="categoriesAlert" class="alert"></div>
+
+    <section class="charts-grid">
       <div class="card">
         <div class="card-header">
           <h2 class="card-title">支出分类</h2>
           <span class="soft-tag" id="expenseCount">0 个</span>
         </div>
-        <div id="expenseCategoryList" class="category-list"></div>
+        <div class="category-grid" id="expenseCategories"></div>
       </div>
-    </div>
-    <div class="col-6">
       <div class="card">
         <div class="card-header">
           <h2 class="card-title">收入分类</h2>
           <span class="soft-tag" id="incomeCount">0 个</span>
         </div>
-        <div id="incomeCategoryList" class="category-list"></div>
+        <div class="category-grid" id="incomeCategories"></div>
+      </div>
+    </section>
+
+    <!-- 添加/编辑分类弹窗 -->
+    <div id="categoryModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; display:none; align-items:center; justify-content:center;">
+      <div class="card" style="width:100%; max-width:400px; margin:0;">
+        <div class="card-header">
+          <h2 class="card-title" id="modalTitle">添加分类</h2>
+          <button class="btn btn-sm" id="closeModalBtn">✕</button>
+        </div>
+        <form id="categoryForm">
+          <input type="hidden" id="categoryId">
+          <div class="form-item">
+            <label for="categoryName">分类名称</label>
+            <input type="text" id="categoryName" placeholder="请输入分类名称" required>
+          </div>
+          <div class="form-item">
+            <label for="categoryType">分类类型</label>
+            <select id="categoryType" required>
+              <option value="expense">支出</option>
+              <option value="income">收入</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="saveCategoryBtn">保存</button>
+        </form>
       </div>
     </div>
-  </div>
-</main>
+  </main>
 
-<!-- Edit Category Modal -->
-<div id="editCategoryModal" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">编辑分类</h3>
-      <button class="modal-close" id="closeEditModal">×</button>
-    </div>
-    <div class="form-item">
-      <label for="editCategoryName">分类名称</label>
-      <input id="editCategoryName" type="text" placeholder="输入分类名称" maxlength="20">
-    </div>
-    <input type="hidden" id="editCategoryId">
-    <div class="modal-footer">
-      <button class="btn btn-outline" id="cancelEditBtn">取消</button>
-      <button class="btn btn-primary" id="saveEditBtn">保存</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-<script src="js/axios-config.js"></script>
-<script src="js/toast.js"></script>
-<script src="js/categories.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <script src="js/axios-config.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/categories.js"></script>
 </body>
 </html>

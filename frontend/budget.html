@@ -4,97 +4,89 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>预算管理 - 个人理财管理系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<nav class="navbar">
-  <div class="logo">个人<span>理财</span></div>
-  <ul class="nav-links">
-    <li><a href="dashboard.html">仪表盘</a></li>
-    <li><a href="statistics.html">统计分析</a></li>
-    <li><a href="records.html">记账管理</a></li>
-    <li><a href="budget.html" class="active">预算管理</a></li>
-    <li><a href="categories.html">分类管理</a></li>
-  </ul>
-  <div class="user-info">
-    <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
-    <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
-  </div>
-</nav>
+  <nav class="navbar">
+    <div class="logo"><span>个</span><span>人</span><span>理</span><span>财</span></div>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">仪表盘</a></li>
+      <li><a href="statistics.html">统计分析</a></li>
+      <li><a href="records.html">记账管理</a></li>
+      <li><a href="budget.html" class="active">预算管理</a></li>
+      <li><a href="categories.html">分类管理</a></li>
+    </ul>
+    <div class="user-info">
+      <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
+      <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+    </div>
+  </nav>
 
-<main class="container">
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">月度预算设置</h2>
+  <main class="container">
+    <section class="page-hero">
+      <div>
+        <p class="eyebrow">预算管理</p>
+        <h1>合理规划每月支出</h1>
+        <p class="page-subtitle">设置各分类的月度预算，实时监控消费进度，避免超支。</p>
+      </div>
       <div class="hero-actions">
         <label class="toolbar-field compact-field" for="budgetMonth">预算月份</label>
         <input type="month" id="budgetMonth">
       </div>
-    </div>
-    
-    <div class="form-item">
-      <label for="monthMoney">本月总预算金额</label>
-      <input id="monthMoney" type="number" step="100" min="0" placeholder="请输入本月总预算">
-    </div>
-    <button class="btn btn-primary" id="saveBudgetBtn">保存总预算</button>
-  </div>
+    </section>
 
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">总预算进度</h2>
-      <span class="soft-tag" id="totalBudgetTag">未设置</span>
-    </div>
-    <div id="budgetSummary" class="budget-summary"></div>
-    <div class="progress-bar-container">
-      <div id="totalProgressBar" class="progress-bar"></div>
-    </div>
-    <p class="progress-text" id="totalProgressText">0%</p>
-  </div>
+    <div id="budgetAlert" class="alert"></div>
 
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">分类预算设置</h2>
-      <button class="btn btn-outline" id="addCategoryBudgetBtn">+ 添加分类预算</button>
-    </div>
-    <div id="categoryBudgetList" class="category-budget-list"></div>
-  </div>
+    <section class="summary-grid">
+      <article class="summary-card">
+        <div class="label">总预算</div>
+        <div class="value" id="totalBudget">¥0.00</div>
+      </article>
+      <article class="summary-card">
+        <div class="label">已使用</div>
+        <div class="value expense" id="totalUsed">¥0.00</div>
+      </article>
+      <article class="summary-card">
+        <div class="label">剩余</div>
+        <div class="value balance" id="totalRemaining">¥0.00</div>
+      </article>
+    </section>
 
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">分类预算进度</h2>
-    </div>
-    <div id="categoryProgressList" class="category-progress-list"></div>
-  </div>
-</main>
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">分类预算</h2>
+        <button class="btn btn-primary" id="addBudgetBtn">+ 设置预算</button>
+      </div>
+      <div class="budget-progress" id="budgetList"></div>
+    </section>
 
-<!-- Add Category Budget Modal -->
-<div id="addBudgetModal" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">添加分类预算</h3>
-      <button class="modal-close" id="closeAddModal">×</button>
+    <!-- 添加/编辑预算弹窗 -->
+    <div id="budgetModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; display:none; align-items:center; justify-content:center;">
+      <div class="card" style="width:100%; max-width:400px; margin:0;">
+        <div class="card-header">
+          <h2 class="card-title" id="modalTitle">设置预算</h2>
+          <button class="btn btn-sm" id="closeModalBtn">✕</button>
+        </div>
+        <form id="budgetForm">
+          <input type="hidden" id="budgetId">
+          <div class="form-item">
+            <label for="budgetCategory">分类</label>
+            <select id="budgetCategory" required></select>
+          </div>
+          <div class="form-item">
+            <label for="budgetAmount">预算金额</label>
+            <input type="number" id="budgetAmount" step="0.01" min="0" placeholder="请输入预算金额" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="saveBudgetBtn">保存</button>
+        </form>
+      </div>
     </div>
-    <div class="form-item">
-      <label for="budgetCategory">选择分类</label>
-      <select id="budgetCategory">
-        <option value="">请选择分类</option>
-      </select>
-    </div>
-    <div class="form-item">
-      <label for="budgetAmount">预算金额</label>
-      <input id="budgetAmount" type="number" step="100" min="0" placeholder="输入预算金额">
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" id="cancelAddBtn">取消</button>
-      <button class="btn btn-primary" id="saveCategoryBudgetBtn">保存</button>
-    </div>
-  </div>
-</div>
+  </main>
 
-<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-<script src="js/axios-config.js"></script>
-<script src="js/toast.js"></script>
-<script src="js/budget.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <script src="js/axios-config.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/budget.js"></script>
 </body>
 </html>

@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>仪表盘 - 个人理财管理系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <nav class="navbar">
-    <div class="logo">个人<span>理财</span></div>
+    <div class="logo"><span>个</span><span>人</span><span>理</span><span>财</span></div>
     <ul class="nav-links">
       <li><a href="dashboard.html" class="active">仪表盘</a></li>
       <li><a href="statistics.html">统计分析</a></li>
@@ -52,48 +53,41 @@
       </article>
     </section>
 
-    <section class="row">
-      <div class="col-6">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">支出分类占比</h2>
-            <span class="soft-tag">ECharts</span>
-          </div>
-          <div id="expensePieChart" class="chart-box"></div>
+    <section class="charts-grid">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">支出分类占比</h2>
+          <span class="soft-tag">ECharts</span>
         </div>
+        <div id="expensePieChart" class="chart-box"></div>
       </div>
-      <div class="col-6">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">预算进度概览</h2>
-            <span class="soft-tag">月度预算</span>
-          </div>
-          <div id="budgetSummary" class="budget-progress"></div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">预算进度概览</h2>
+          <span class="soft-tag">月度预算</span>
         </div>
+        <div id="budgetSummary" class="budget-progress"></div>
       </div>
     </section>
 
     <section class="card">
       <div class="card-header">
         <h2 class="card-title">近期账单</h2>
-        <a class="btn-link" href="statistics.html">查看趋势分析</a>
+        <a class="btn-link" href="records.html">查看全部 →</a>
       </div>
-      <div class="table-wrapper">
+      <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>日期</th>
-              <th>类型</th>
               <th>分类</th>
-              <th>备注</th>
               <th>金额</th>
+              <th>类型</th>
+              <th>备注</th>
             </tr>
           </thead>
-          <tbody id="recentRecordsBody"></tbody>
+          <tbody id="recentBills"></tbody>
         </table>
-      </div>
-      <div id="recordsEmpty" class="empty-state" hidden>
-        <p>当前还没有账单记录，先添加一笔收支后再查看仪表盘。</p>
       </div>
     </section>
   </main>

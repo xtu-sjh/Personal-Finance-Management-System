@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>统计分析 - 个人理财管理系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <nav class="navbar">
-    <div class="logo">个人<span>理财</span></div>
+    <div class="logo"><span>个</span><span>人</span><span>理</span><span>财</span></div>
     <ul class="nav-links">
       <li><a href="dashboard.html">仪表盘</a></li>
       <li><a href="statistics.html" class="active">统计分析</a></li>
@@ -75,19 +76,30 @@
       </div>
       <div class="card">
         <div class="card-header">
-          <h2 class="card-title">分类排行榜</h2>
-          <span class="soft-tag">Top 支出分类</span>
+          <h2 class="card-title">收支趋势</h2>
+          <span class="soft-tag">折线图</span>
         </div>
-        <div id="categoryRanking" class="ranking-list"></div>
+        <div id="trendChart" class="chart-box"></div>
       </div>
     </section>
 
     <section class="card">
       <div class="card-header">
-        <h2 class="card-title">收支趋势折线图</h2>
-        <span class="soft-tag">趋势观察</span>
+        <h2 class="card-title">分类明细</h2>
       </div>
-      <div id="trendChart" class="chart-box chart-box-lg"></div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>分类</th>
+              <th>金额</th>
+              <th>占比</th>
+              <th>进度</th>
+            </tr>
+          </thead>
+          <tbody id="categoryDetails"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 
