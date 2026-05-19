@@ -9,6 +9,7 @@
   var categoryDetails = document.getElementById('categoryDetails');
   var pieChart = null;
   var trendChart = null;
+  var budgetData = []; // 缓存预算数据
 
   // 初始化
   document.getElementById('username').textContent = currentUser.username || '用户#' + currentUser.id;
@@ -37,11 +38,13 @@
     try {
       var results = await Promise.allSettled([
         getSummary(month),
-        getTrend(months)
+        getTrend(months),
+        getBudgets(month)
       ]);
 
       var summary = results[0].status === 'fulfilled' ? results[0].value : null;
       var trend = results[1].status === 'fulfilled' ? results[1].value : { trend: [] };
+      budgetData = results[2].status === 'fulfilled' ? (results[2].value || []) : [];
 
       renderSummary(summary);
       renderPieChart(summary ? (summary.categoryStats || []) : []);
@@ -63,9 +66,21 @@
 
   async function getSummary(month) {
     try {
-      return await api.get('/api/statistics/summary', {
+      var result = await api.get('/api/statistics/summary', {
         params: { userId: currentUser.id, month: month }
       });
+      // 确保 incomeCategoryStats 字段存在（处理 SNAKE_CASE 命名策略）
+      if (!result.incomeCategoryStats && !result.income_category_stats) {
+        result.incomeCategoryStats = [];
+      } else if (result.income_category_stats && !result.incomeCategoryStats) {
+        result.incomeCategoryStats = result.income_category_stats;
+      }
+      if (!result.expenseCategoryStats && !result.expense_category_stats) {
+        result.expenseCategoryStats = result.categoryStats || [];
+      } else if (result.expense_category_stats && !result.expenseCategoryStats) {
+        result.expenseCategoryStats = result.expense_category_stats;
+      }
+      return result;
     } catch (error) {
       var pageData = await api.get('/api/records', {
         params: { userId: currentUser.id, page: 1, size: 300, month: month }
@@ -86,6 +101,16 @@
       return {
         trend: buildTrendFromRecords(pageData.records || pageData || [], months)
       };
+    }
+  }
+
+  async function getBudgets(month) {
+    try {
+      return await api.get('/api/budget', {
+        params: { userId: currentUser.id, month: month }
+      });
+    } catch (error) {
+      return [];
     }
   }
 
@@ -192,6 +217,15 @@
     });
   }
 
+  function getBudgetForCategory(category) {
+    for (var i = 0; i < budgetData.length; i++) {
+      if (budgetData[i].category === category) {
+        return budgetData[i];
+      }
+    }
+    return null;
+  }
+
   function renderCategoryDetails(summary) {
     categoryDetails.innerHTML = '';
 
@@ -202,11 +236,17 @@
 
     var income = Number(summary.income || 0);
     var expense = Number(summary.expense || 0);
-    var total = income + expense;
 
-    // 支出分类
-    var expenseStats = summary.expenseCategoryStats || summary.categoryStats || [];
-    var incomeStats = summary.incomeCategoryStats || [];
+    // 获取分类数据，统一处理字段名（包括 SNAKE_CASE 命名策略）
+    var expenseCategoryData = summary.expenseCategoryStats || summary.expense_category_stats || summary.categoryStats || [];
+    var incomeCategoryData = summary.incomeCategoryStats || summary.income_category_stats || [];
+
+    var expenseStats = expenseCategoryData.map(function(item) {
+      return { name: item.name || item.category || '未分类', value: Number(item.value || item.amount || item.total || 0) };
+    });
+    var incomeStats = incomeCategoryData.map(function(item) {
+      return { name: item.name || item.category || '未分类', value: Number(item.value || item.amount || item.total || 0) };
+    });
 
     var html = '';
 
@@ -214,15 +254,31 @@
     if (expenseStats.length > 0) {
       html += '<tr><td colspan="4" style="background:var(--bg-secondary);font-weight:600;padding:10px 16px;">支出分类</td></tr>';
       expenseStats.forEach(function(item) {
-        var amount = Number(item.value || item.amount || item.total || 0);
-        var percent = expense > 0 ? (amount / expense * 100).toFixed(1) : 0;
-        var barWidth = expense > 0 ? Math.min(amount / expense * 100, 100) : 0;
+        var percent = expense > 0 ? (item.value / expense * 100).toFixed(1) : 0;
+
+        // 获取预算信息
+        var budget = getBudgetForCategory(item.name);
+        var budgetHtml = '';
+        if (budget) {
+          var budgetAmount = Number(budget.budgetAmount || budget.amount || 0);
+          var spent = Number(budget.spent || 0);
+          var progress = budgetAmount > 0 ? Math.min((spent / budgetAmount * 100), 100) : 0;
+          var barClass = progress >= 100 ? 'danger' : progress >= 80 ? 'warning' : 'success';
+          budgetHtml = '<div style="min-width:120px;">' +
+            '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">¥' + formatNumber(spent) + ' / ¥' + formatNumber(budgetAmount) + '</div>' +
+            '<div style="background:var(--border);border-radius:4px;height:8px;width:100%;">' +
+              '<div style="background:var(--' + barClass + ');height:100%;border-radius:4px;width:' + progress + '%;"></div>' +
+            '</div>' +
+          '</div>';
+        } else {
+          budgetHtml = '<span style="color:var(--text-tertiary);font-size:13px;">未设置预算</span>';
+        }
 
         html += '<tr>' +
-          '<td>' + window.financeApp.escapeHtml(item.name || item.category || '未分类') + '</td>' +
-          '<td class="value expense">-' + window.financeApp.formatCurrency(amount) + '</td>' +
+          '<td>' + window.financeApp.escapeHtml(item.name) + '</td>' +
+          '<td class="value expense">-' + window.financeApp.formatCurrency(item.value) + '</td>' +
           '<td>' + percent + '%</td>' +
-          '<td><div style="background:var(--border);border-radius:4px;height:8px;width:100%;min-width:80px;"><div style="background:var(--danger);height:100%;border-radius:4px;width:' + barWidth + '%;"></div></div></td>' +
+          '<td>' + budgetHtml + '</td>' +
         '</tr>';
       });
     }
@@ -231,15 +287,13 @@
     if (incomeStats.length > 0) {
       html += '<tr><td colspan="4" style="background:var(--bg-secondary);font-weight:600;padding:10px 16px;">收入分类</td></tr>';
       incomeStats.forEach(function(item) {
-        var amount = Number(item.value || item.amount || item.total || 0);
-        var percent = income > 0 ? (amount / income * 100).toFixed(1) : 0;
-        var barWidth = income > 0 ? Math.min(amount / income * 100, 100) : 0;
+        var percent = income > 0 ? (item.value / income * 100).toFixed(1) : 0;
 
         html += '<tr>' +
-          '<td>' + window.financeApp.escapeHtml(item.name || item.category || '未分类') + '</td>' +
-          '<td class="value income">+' + window.financeApp.formatCurrency(amount) + '</td>' +
+          '<td>' + window.financeApp.escapeHtml(item.name) + '</td>' +
+          '<td class="value income">+' + window.financeApp.formatCurrency(item.value) + '</td>' +
           '<td>' + percent + '%</td>' +
-          '<td><div style="background:var(--border);border-radius:4px;height:8px;width:100%;min-width:80px;"><div style="background:var(--success);height:100%;border-radius:4px;width:' + barWidth + '%;"></div></div></td>' +
+          '<td><span style="color:var(--text-tertiary);font-size:13px;">--</span></td>' +
         '</tr>';
       });
     }
@@ -300,6 +354,10 @@
           };
         })
       : [];
+  }
+
+  function formatNumber(value) {
+    return Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   function showAlert(message, type) {

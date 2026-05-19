@@ -10,7 +10,10 @@
   document.getElementById('logoutBtn').addEventListener('click', window.financeApp.logout);
   document.getElementById('addCategoryBtn').addEventListener('click', openAddModal);
   document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-  document.getElementById('categoryForm').addEventListener('submit', saveCategory);
+
+  // 绑定表单提交事件
+  var categoryForm = document.getElementById('categoryForm');
+  categoryForm.addEventListener('submit', saveCategory);
 
   // 创建提示弹窗
   createDuplicateModal();
@@ -83,31 +86,15 @@
       var defaultIncome = ['工资', '奖金', '投资收益', '兼职收入', '其他收入'];
 
       allCategories = [];
-      defaultExpense.forEach(function(name) { allCategories.push({ name: name, type: 'expense' }); });
-      defaultIncome.forEach(function(name) { allCategories.push({ name: name, type: 'income' }); });
+      defaultExpense.forEach(function(name, index) { allCategories.push({ id: 'default-expense-' + index, name: name, type: 'expense' }); });
+      defaultIncome.forEach(function(name, index) { allCategories.push({ id: 'default-income-' + index, name: name, type: 'income' }); });
 
-      renderDefaultCategories('expenseCategories', defaultExpense, 'expense');
-      renderDefaultCategories('incomeCategories', defaultIncome, 'income');
+      renderCategoryList('expenseCategories', allCategories.filter(function(c) { return c.type === 'expense'; }), 'expense');
+      renderCategoryList('incomeCategories', allCategories.filter(function(c) { return c.type === 'income'; }), 'income');
 
       document.getElementById('expenseCount').textContent = defaultExpense.length + ' 个';
       document.getElementById('incomeCount').textContent = defaultIncome.length + ' 个';
     }
-  }
-
-  function renderDefaultCategories(containerId, names, type) {
-    var container = document.getElementById(containerId);
-    container.innerHTML = '';
-
-    names.forEach(function(name) {
-      var item = document.createElement('div');
-      item.className = 'category-item';
-      item.innerHTML =
-        '<span class="category-name">' + escapeHtml(name) + '</span>' +
-        '<div class="category-actions">' +
-          '<span class="soft-tag">' + (type === 'expense' ? '支出' : '收入') + '</span>' +
-        '</div>';
-      container.appendChild(item);
-    });
   }
 
   function renderCategoryList(containerId, categories, type) {
@@ -122,23 +109,47 @@
     categories.forEach(function(category) {
       var item = document.createElement('div');
       item.className = 'category-item';
+      item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-secondary);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;';
       item.innerHTML =
         '<span class="category-name">' + escapeHtml(category.name) + '</span>' +
-        '<div class="category-actions">' +
-          '<button class="btn btn-sm btn-outline edit-btn" data-id="' + category.id + '" data-name="' + escapeHtml(category.name) + '" data-type="' + type + '">编辑</button> ' +
+        '<div class="category-actions" style="display:none;">' +
+          '<button class="btn btn-sm btn-outline edit-btn" data-id="' + category.id + '" data-name="' + escapeHtml(category.name) + '" data-type="' + type + '" style="margin-right:6px;">编辑</button>' +
           '<button class="btn btn-sm btn-danger delete-btn" data-id="' + category.id + '">删除</button>' +
         '</div>';
+
+      // 点击显示/隐藏操作按钮
+      item.addEventListener('click', function(e) {
+        // 如果点击的是按钮，不处理
+        if (e.target.tagName === 'BUTTON') return;
+
+        var actions = this.querySelector('.category-actions');
+        var allActions = container.querySelectorAll('.category-actions');
+
+        // 隐藏其他所有操作按钮
+        allActions.forEach(function(act) {
+          if (act !== actions) {
+            act.style.display = 'none';
+          }
+        });
+
+        // 切换当前操作按钮的显示状态
+        actions.style.display = actions.style.display === 'none' ? 'flex' : 'none';
+      });
+
       container.appendChild(item);
     });
 
-    // 绑定事件
+    // 绑定编辑和删除事件
     container.querySelectorAll('.edit-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
         openEditModal(this.getAttribute('data-id'), this.getAttribute('data-name'), this.getAttribute('data-type'));
       });
     });
+
     container.querySelectorAll('.delete-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
         deleteCategory(this.getAttribute('data-id'));
       });
     });
