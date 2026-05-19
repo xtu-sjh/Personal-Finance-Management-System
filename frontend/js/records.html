@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>记账管理 - 个人理财管理系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">个人<span>理财</span></div>
+  <ul class="nav-links">
+    <li><a href="dashboard.html">仪表盘</a></li>
+    <li><a href="statistics.html">统计分析</a></li>
+    <li><a href="records.html" class="active">记账管理</a></li>
+    <li><a href="budget.html">预算管理</a></li>
+    <li><a href="categories.html">分类管理</a></li>
+  </ul>
+  <div class="user-info">
+    <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
+    <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">新增收支记录</h2>
+    </div>
+    <div class="form-item">
+      <label for="type">收支类型</label>
+      <select id="type">
+        <option value="expense">支出</option>
+        <option value="income">收入</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label for="category">消费分类</label>
+      <select id="category">
+        <option>餐饮</option><option>交通</option><option>购物</option><option>娱乐</option>
+        <option>住房</option><option>医疗</option><option>教育</option>
+        <option>工资</option><option>奖金</option><option>兼职</option><option>投资</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label for="money">金额</label>
+      <input id="money" type="number" step="0.01" min="0.01" placeholder="请输入金额">
+    </div>
+    <div class="form-item">
+      <label for="createTime">记录日期</label>
+      <input id="createTime" type="date">
+    </div>
+    <div class="form-item">
+      <label for="note">备注（可选）</label>
+      <input id="note" type="text" placeholder="添加备注" maxlength="100">
+    </div>
+    <button class="btn btn-success" id="addRecordBtn">提交记录</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">收支记录列表</h2>
+      <div class="export-toolbar">
+        <button class="btn btn-outline" id="exportCsvBtn">导出CSV</button>
+        <button class="btn btn-outline" id="exportExcelBtn">导出Excel</button>
+      </div>
+    </div>
+    
+    <div class="filters">
+      <div class="filter-group">
+        <label for="filterMonth">月份</label>
+        <input type="month" id="filterMonth">
+      </div>
+      <div class="filter-group">
+        <label for="filterCategory">分类</label>
+        <select id="filterCategory">
+          <option value="">全部</option>
+          <option>餐饮</option><option>交通</option><option>购物</option><option>娱乐</option>
+          <option>住房</option><option>医疗</option><option>教育</option>
+          <option>工资</option><option>奖金</option><option>兼职</option><option>投资</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterType">类型</label>
+        <select id="filterType">
+          <option value="">全部</option>
+          <option value="expense">支出</option>
+          <option value="income">收入</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="filterBtn">筛选</button>
+      <button class="btn btn-outline" id="resetFilterBtn">重置</button>
+    </div>
+
+    <div class="table-wrapper" style="margin-top: 16px;">
+      <table>
+        <thead>
+          <tr>
+            <th>类型</th><th>分类</th><th>金额</th><th>日期</th><th>备注</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="recordTable"></tbody>
+      </table>
+    </div>
+    
+    <div id="loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <span>加载中...</span>
+    </div>
+    
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <p>暂无记录</p>
+    </div>
+    
+    <div id="pagination" class="pagination"></div>
+  </div>
+</main>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">编辑记录</h3>
+      <button class="modal-close" id="closeEditModal">×</button>
+    </div>
+    <div class="form-item">
+      <label for="editType">收支类型</label>
+      <select id="editType">
+        <option value="expense">支出</option>
+        <option value="income">收入</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label for="editCategory">消费分类</label>
+      <select id="editCategory">
+        <option>餐饮</option><option>交通</option><option>购物</option><option>娱乐</option>
+        <option>住房</option><option>医疗</option><option>教育</option>
+        <option>工资</option><option>奖金</option><option>兼职</option><option>投资</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label for="editMoney">金额</label>
+      <input id="editMoney" type="number" step="0.01" min="0.01" placeholder="请输入金额">
+    </div>
+    <div class="form-item">
+      <label for="editDate">记录日期</label>
+      <input id="editDate" type="date">
+    </div>
+    <div class="form-item">
+      <label for="editNote">备注</label>
+      <input id="editNote" type="text" placeholder="添加备注" maxlength="100">
+    </div>
+    <input type="hidden" id="editRecordId">
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancelEditBtn">取消</button>
+      <button class="btn btn-primary" id="saveEditBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+<script src="js/axios-config.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/records.js"></script>
+
+</body>
+</html>

@@ -8,57 +8,68 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Service // 关键：标记这是一个Service层组件，交给Spring管理
-@RequiredArgsConstructor // 关键：Lombok注解，自动生成带final参数的构造函数（替代@Autowired）
+@Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    // 注入依赖（注意：必须用final，配合@RequiredArgsConstructor）
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder; // 这个是我们之前在config里配置的BCrypt加密器
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User register(String username, String password, String email) {
-        // 1. 检查用户名是否已被注册
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getUsername, username); // 等价于 SQL: WHERE username = ?
+        wrapper.eq(User::getUsername, username);
         if (userMapper.selectCount(wrapper) > 0) {
-            throw new IllegalArgumentException("用户名已存在"); // 抛出异常，后面Controller会处理
+            throw new IllegalArgumentException("用户名已存在");
         }
-
-        // 2. 创建用户对象，密码加密后存储
         User user = new User();
         user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password)); // 【核心】BCrypt加密，永远不存明文密码
+        user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email);
-
-        // 3. 插入数据库（MyBatis-Plus提供的方法）
         userMapper.insert(user);
         return user;
     }
 
     @Override
     public User login(String username, String password) {
-        // 1. 根据用户名查询用户
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
         User user = userMapper.selectOne(wrapper);
-
-        // 2. 判断用户是否存在
-        if (user == null) {
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("用户名或密码错误");
         }
-
-        // 3. 【核心】BCrypt密码比对（matches方法会自动处理盐值）
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new IllegalArgumentException("用户名或密码错误");
-        }
-
         return user;
     }
 
     @Override
     public User getById(Long id) {
-        // 直接调用MyBatis-Plus提供的根据ID查询方法
         return userMapper.selectById(id);
+    }
+
+    @Override
+    public User updateEmail(Long userId, String email) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+        user.setEmail(email);
+        userMapper.updateById(user);
+        return user;
+    }
+
+    @Override
+    public void updatePassword(Long userId, String oldPassword, String newPassword) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalArgumentException("当前密码错误");
+        }
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException("新密码长度不能少于6位");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userMapper.updateById(user);
     }
 }

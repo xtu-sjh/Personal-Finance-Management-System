@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>预算管理 - 个人理财管理系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">个人<span>理财</span></div>
+  <ul class="nav-links">
+    <li><a href="dashboard.html">仪表盘</a></li>
+    <li><a href="statistics.html">统计分析</a></li>
+    <li><a href="records.html">记账管理</a></li>
+    <li><a href="budget.html" class="active">预算管理</a></li>
+    <li><a href="categories.html">分类管理</a></li>
+  </ul>
+  <div class="user-info">
+    <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
+    <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">月度预算设置</h2>
+      <div class="hero-actions">
+        <label class="toolbar-field compact-field" for="budgetMonth">预算月份</label>
+        <input type="month" id="budgetMonth">
+      </div>
+    </div>
+    
+    <div class="form-item">
+      <label for="monthMoney">本月总预算金额</label>
+      <input id="monthMoney" type="number" step="100" min="0" placeholder="请输入本月总预算">
+    </div>
+    <button class="btn btn-primary" id="saveBudgetBtn">保存总预算</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">总预算进度</h2>
+      <span class="soft-tag" id="totalBudgetTag">未设置</span>
+    </div>
+    <div id="budgetSummary" class="budget-summary"></div>
+    <div class="progress-bar-container">
+      <div id="totalProgressBar" class="progress-bar"></div>
+    </div>
+    <p class="progress-text" id="totalProgressText">0%</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">分类预算设置</h2>
+      <button class="btn btn-outline" id="addCategoryBudgetBtn">+ 添加分类预算</button>
+    </div>
+    <div id="categoryBudgetList" class="category-budget-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">分类预算进度</h2>
+    </div>
+    <div id="categoryProgressList" class="category-progress-list"></div>
+  </div>
+</main>
+
+<!-- Add Category Budget Modal -->
+<div id="addBudgetModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">添加分类预算</h3>
+      <button class="modal-close" id="closeAddModal">×</button>
+    </div>
+    <div class="form-item">
+      <label for="budgetCategory">选择分类</label>
+      <select id="budgetCategory">
+        <option value="">请选择分类</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label for="budgetAmount">预算金额</label>
+      <input id="budgetAmount" type="number" step="100" min="0" placeholder="输入预算金额">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancelAddBtn">取消</button>
+      <button class="btn btn-primary" id="saveCategoryBudgetBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+<script src="js/axios-config.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/budget.js"></script>
+
+</body>
+</html>

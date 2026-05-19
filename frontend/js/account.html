@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 - 个人理财管理系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">个人<span>理财</span></div>
+  <ul class="nav-links">
+    <li><a href="dashboard.html">仪表盘</a></li>
+    <li><a href="statistics.html">统计分析</a></li>
+    <li><a href="records.html">记账管理</a></li>
+    <li><a href="budget.html">预算管理</a></li>
+    <li><a href="categories.html">分类管理</a></li>
+  </ul>
+  <div class="user-info">
+    <span>欢迎，<span id="username" class="username">--</span></span>
+    <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">个人信息</h2>
+    </div>
+    <div class="form-item">
+      <label for="profileUsername">用户名</label>
+      <input id="profileUsername" type="text" disabled>
+    </div>
+    <div class="form-item">
+      <label for="profileEmail">邮箱</label>
+      <input id="profileEmail" type="email" placeholder="请输入邮箱">
+    </div>
+    <button class="btn btn-primary" id="saveProfileBtn">保存修改</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">修改密码</h2>
+    </div>
+    <div class="form-item">
+      <label for="currentPassword">当前密码</label>
+      <input id="currentPassword" type="password" placeholder="请输入当前密码">
+    </div>
+    <div class="form-item">
+      <label for="newPassword">新密码</label>
+      <input id="newPassword" type="password" placeholder="请输入新密码（至少6位）">
+    </div>
+    <div class="form-item">
+      <label for="confirmPassword">确认新密码</label>
+      <input id="confirmPassword" type="password" placeholder="请再次输入新密码">
+    </div>
+    <button class="btn btn-primary" id="changePasswordBtn">修改密码</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">账号安全</h2>
+    </div>
+    <div class="account-info">
+      <p>账号ID: <span id="accountId">--</span></p>
+      <p>注册时间: <span id="accountCreateTime">--</span></p>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+<script src="js/axios-config.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/account.js"></script>
+
+</body>
+</html>

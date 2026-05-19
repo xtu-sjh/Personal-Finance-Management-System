@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>预算管理 - 个人理财管理系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="navbar">
+  <div class="container">
+    <div>📊 个人理财管理系统</div>
+    <div>
+      <a href="03-dashboard.html">首页</a>
+      <a href="04-records.html">记账管理</a>
+      <a href="06-budget.html">预算管理</a>
+      <a href="javascript:logout()">退出登录</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="title">月度预算设置</div>
+    <div class="form-item">
+      <label>本月总预算金额</label>
+      <input id="monthMoney" type="number" placeholder="请输入本月预算">
+    </div>
+    <button class="btn btn-primary" onclick="saveBudget()">保存预算</button>
+  </div>
+
+  <div class="card">
+    <div class="title">预算使用进度</div>
+    <div id="budgetInfo" style="font-size:16px;line-height:2;"></div>
+    <div style="width:100%;height:20px;background:#eee;border-radius:10px;margin-top:10px;">
+      <div id="progressBar" style="height:100%;border-radius:10px;background:#409eff;width:0%;"></div>
+    </div>
+    <p style="margin-top:10px;" id="progressText">0%</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="js/07-axios-config.js"></script>
+<script src="js/utils.js"></script>
+
+<script>
+if (!requireCurrentUser()) { throw new Error("未登录"); }
+
+window.onload = async function () {
+  loadBudgetInfo();
+};
+
+async function saveBudget() {
+  const monthMoney = document.getElementById("monthMoney").value.trim();
+  if (!monthMoney) { alert("请输入预算金额！"); return; }
+  try {
+    await api.post("/api/budget/set", { monthMoney });
+    alert("预算保存成功！");
+    loadBudgetInfo();
+  } catch (err) { alert("保存失败"); }
+}
+
+async function loadBudgetInfo() {
+  try {
+    const data = await api.get("/api/budget/info");
+    const total = data.totalBudget || 0;
+    const used = data.usedBudget || 0;
+    const remain = total - used;
+    const rate = total > 0 ? (used / total * 100).toFixed(1) : 0;
+
+    document.getElementById("budgetInfo").innerHTML = `
+      月度总预算：¥ ${total} <br>
+      已消费金额：¥ ${used} <br>
+      剩余预算：¥ ${remain}
+    `;
+    const bar = document.getElementById("progressBar");
+    const text = document.getElementById("progressText");
+    bar.style.width = rate + "%";
+    text.innerText = `已使用 ${rate}%`;
+
+    if (rate >= 90) bar.style.background = "#f56c6c";
+    else if (rate >= 70) bar.style.background = "#e6a23c";
+    else bar.style.background = "#409eff";
+  } catch (err) { console.log("获取预算失败"); }
+}
+
+function logout() {
+  if (confirm("确定退出？")) {
+    clearCurrentUser();
+    location.href = "01-index.html";
+  }
+}
+</script>
+<script src="js/06-budget.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人理财管理系统</title>
+</head>
+<body>
+<script>
+(function () {
+  var user = null;
+  try {
+    var raw = sessionStorage.getItem('finance.currentUser');
+    if (raw) { user = JSON.parse(raw); }
+  } catch (e) {}
+  if (user && user.id) {
+    window.location.href = 'dashboard.html';
+  } else {
+    window.location.href = 'login.html';
+  }
+})();
+</script>
+</body>
+</html>

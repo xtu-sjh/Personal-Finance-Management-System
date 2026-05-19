@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>统计分析 - 个人理财管理系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">个人<span>理财</span></div>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">仪表盘</a></li>
+      <li><a href="statistics.html" class="active">统计分析</a></li>
+      <li><a href="records.html">记账管理</a></li>
+      <li><a href="budget.html">预算管理</a></li>
+      <li><a href="categories.html">分类管理</a></li>
+    </ul>
+    <div class="user-info">
+      <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
+      <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="page-hero">
+      <div>
+        <p class="eyebrow">统计分析</p>
+        <h1>拆解收支趋势与消费结构</h1>
+        <p class="page-subtitle">按月份和时间范围查看收入、支出、结余与分类分布，辅助你更快发现消费变化。</p>
+      </div>
+    </section>
+
+    <div id="statisticsAlert" class="alert"></div>
+
+    <section class="card">
+      <div class="analytics-toolbar">
+        <div class="toolbar-group">
+          <label class="toolbar-field" for="statisticsMonth">汇总月份</label>
+          <input type="month" id="statisticsMonth">
+        </div>
+        <div class="toolbar-group">
+          <label class="toolbar-field" for="trendMonths">趋势周期</label>
+          <select id="trendMonths">
+            <option value="3">近 3 个月</option>
+            <option value="6" selected>近 6 个月</option>
+            <option value="12">近 12 个月</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card">
+        <div class="label">本月收入</div>
+        <div class="value income" id="statisticsIncome">¥0.00</div>
+      </article>
+      <article class="summary-card">
+        <div class="label">本月支出</div>
+        <div class="value expense" id="statisticsExpense">¥0.00</div>
+      </article>
+      <article class="summary-card">
+        <div class="label">本月结余</div>
+        <div class="value balance" id="statisticsBalance">¥0.00</div>
+      </article>
+    </section>
+
+    <section class="charts-grid">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">支出分类饼图</h2>
+          <span class="soft-tag">月度结构</span>
+        </div>
+        <div id="statisticsPieChart" class="chart-box"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">分类排行榜</h2>
+          <span class="soft-tag">Top 支出分类</span>
+        </div>
+        <div id="categoryRanking" class="ranking-list"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">收支趋势折线图</h2>
+        <span class="soft-tag">趋势观察</span>
+      </div>
+      <div id="trendChart" class="chart-box chart-box-lg"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="js/axios-config.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/statistics.js"></script>
+</body>
+</html>

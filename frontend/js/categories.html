@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分类管理 - 个人理财管理系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">个人<span>理财</span></div>
+  <ul class="nav-links">
+    <li><a href="dashboard.html">仪表盘</a></li>
+    <li><a href="statistics.html">统计分析</a></li>
+    <li><a href="records.html">记账管理</a></li>
+    <li><a href="budget.html">预算管理</a></li>
+    <li><a href="categories.html" class="active">分类管理</a></li>
+  </ul>
+  <div class="user-info">
+    <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
+    <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">添加新分类</h2>
+    </div>
+    <div class="form-item">
+      <label for="newCategoryName">分类名称</label>
+      <input id="newCategoryName" type="text" placeholder="输入分类名称" maxlength="20">
+    </div>
+    <div class="form-item">
+      <label for="newCategoryType">分类类型</label>
+      <select id="newCategoryType">
+        <option value="expense">支出</option>
+        <option value="income">收入</option>
+      </select>
+    </div>
+    <button class="btn btn-success" id="addCategoryBtn">添加分类</button>
+  </div>
+
+  <div class="row">
+    <div class="col-6">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">支出分类</h2>
+          <span class="soft-tag" id="expenseCount">0 个</span>
+        </div>
+        <div id="expenseCategoryList" class="category-list"></div>
+      </div>
+    </div>
+    <div class="col-6">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">收入分类</h2>
+          <span class="soft-tag" id="incomeCount">0 个</span>
+        </div>
+        <div id="incomeCategoryList" class="category-list"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">编辑分类</h3>
+      <button class="modal-close" id="closeEditModal">×</button>
+    </div>
+    <div class="form-item">
+      <label for="editCategoryName">分类名称</label>
+      <input id="editCategoryName" type="text" placeholder="输入分类名称" maxlength="20">
+    </div>
+    <input type="hidden" id="editCategoryId">
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancelEditBtn">取消</button>
+      <button class="btn btn-primary" id="saveEditBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+<script src="js/axios-config.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/categories.js"></script>
+
+</body>
+</html>

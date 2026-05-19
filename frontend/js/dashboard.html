@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仪表盘 - 个人理财管理系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">个人<span>理财</span></div>
+    <ul class="nav-links">
+      <li><a href="dashboard.html" class="active">仪表盘</a></li>
+      <li><a href="statistics.html">统计分析</a></li>
+      <li><a href="records.html">记账管理</a></li>
+      <li><a href="budget.html">预算管理</a></li>
+      <li><a href="categories.html">分类管理</a></li>
+    </ul>
+    <div class="user-info">
+      <span>欢迎，<a href="account.html" id="username" class="username">--</a></span>
+      <button type="button" class="btn-logout" id="logoutBtn">退出登录</button>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="page-hero">
+      <div>
+        <p class="eyebrow">财务总览</p>
+        <h1>本月资金流向一目了然</h1>
+        <p class="page-subtitle">查看月度收支、近期账单和预算进度，快速掌握当前财务状态。</p>
+      </div>
+      <div class="hero-actions">
+        <label class="toolbar-field compact-field" for="dashboardMonth">统计月份</label>
+        <input type="month" id="dashboardMonth">
+      </div>
+    </section>
+
+    <div id="dashboardAlert" class="alert"></div>
+
+    <section class="summary-grid">
+      <article class="summary-card">
+        <div class="label">本月收入</div>
+        <div class="value income" id="incomeValue">¥0.00</div>
+      </article>
+      <article class="summary-card">
+        <div class="label">本月支出</div>
+        <div class="value expense" id="expenseValue">¥0.00</div>
+      </article>
+      <article class="summary-card">
+        <div class="label">本月结余</div>
+        <div class="value balance" id="balanceValue">¥0.00</div>
+      </article>
+    </section>
+
+    <section class="row">
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">支出分类占比</h2>
+            <span class="soft-tag">ECharts</span>
+          </div>
+          <div id="expensePieChart" class="chart-box"></div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">预算进度概览</h2>
+            <span class="soft-tag">月度预算</span>
+          </div>
+          <div id="budgetSummary" class="budget-progress"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">近期账单</h2>
+        <a class="btn-link" href="statistics.html">查看趋势分析</a>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>类型</th>
+              <th>分类</th>
+              <th>备注</th>
+              <th>金额</th>
+            </tr>
+          </thead>
+          <tbody id="recentRecordsBody"></tbody>
+        </table>
+      </div>
+      <div id="recordsEmpty" class="empty-state" hidden>
+        <p>当前还没有账单记录，先添加一笔收支后再查看仪表盘。</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="js/axios-config.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
