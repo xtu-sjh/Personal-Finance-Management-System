@@ -1,118 +1,135 @@
 (function () {
-  const { requireCurrentUser, logout, getCurrentMonth, formatCurrency, formatDate, escapeHtml } = window.financeApp;
-  const currentUser = requireCurrentUser();
+  var currentUser = window.financeApp.requireCurrentUser();
+  if (!currentUser) return;
 
-  if (!currentUser) {
-    return;
-  }
+  var showToast = window.financeApp.showToast || alert;
+  var monthInput = document.getElementById('dashboardMonth');
+  var alertEl = document.getElementById('dashboardAlert');
+  var recentBills = document.getElementById('recentBills');
+  var budgetSummary = document.getElementById('budgetSummary');
+  var pieChart = null;
 
-  const usernameEl = document.getElementById('username');
-  const monthInput = document.getElementById('dashboardMonth');
-  const alertEl = document.getElementById('dashboardAlert');
-  const recordsBody = document.getElementById('recentRecordsBody');
-  const recordsEmpty = document.getElementById('recordsEmpty');
-  const budgetSummary = document.getElementById('budgetSummary');
-  const pieChart = echarts.init(document.getElementById('expensePieChart'));
-
-  usernameEl.textContent = currentUser.username || `用户#${currentUser.id}`;
-  monthInput.value = getCurrentMonth();
-  document.getElementById('logoutBtn').addEventListener('click', logout);
+  // 初始化
+  document.getElementById('username').textContent = currentUser.username || '用户#' + currentUser.id;
+  monthInput.value = window.financeApp.getCurrentMonth();
+  document.getElementById('logoutBtn').addEventListener('click', window.financeApp.logout);
   monthInput.addEventListener('change', loadDashboard);
-  window.addEventListener('resize', () => pieChart.resize());
+
+  // 初始化 ECharts
+  if (typeof echarts !== 'undefined') {
+    pieChart = echarts.init(document.getElementById('expensePieChart'));
+    window.addEventListener('resize', function() { pieChart && pieChart.resize(); });
+  }
 
   loadDashboard();
 
   async function loadDashboard() {
-    const month = monthInput.value || getCurrentMonth();
-    const [summaryResult, recentRecordsResult, budgetResult] = await Promise.allSettled([
-      getMonthlySummary(month),
-      getRecentRecords(),
-      getBudgetProgress(month),
-    ]);
+    var month = monthInput.value || window.financeApp.getCurrentMonth();
 
-    const summary = summaryResult.status === 'fulfilled' ? summaryResult.value : null;
-    const recentRecords = recentRecordsResult.status === 'fulfilled' ? recentRecordsResult.value : [];
-    const budgets = budgetResult.status === 'fulfilled' ? budgetResult.value : [];
+    try {
+      var results = await Promise.allSettled([
+        getMonthlySummary(month),
+        getRecentRecords(),
+        getBudgetProgress(month)
+      ]);
 
-    renderSummary(summary);
-    renderRecentRecords(recentRecords);
-    renderBudgetProgress(budgets);
-    renderExpenseChart(summary?.categoryStats || []);
+      var summary = results[0].status === 'fulfilled' ? results[0].value : null;
+      var recentRecords = results[1].status === 'fulfilled' ? results[1].value : [];
+      var budgets = results[2].status === 'fulfilled' ? results[2].value : [];
 
-    const notices = [];
-    if (summaryResult.status === 'rejected') {
-      notices.push('统计接口不可用，当前已回退为基于记录的本地汇总。');
+      renderSummary(summary);
+      renderRecentRecords(recentRecords);
+      renderBudgetProgress(budgets);
+      renderExpenseChart(summary ? (summary.categoryStats || []) : []);
+
+      var notices = [];
+      if (results[0].status === 'rejected') {
+        notices.push('统计接口不可用，当前已回退为基于记录的本地汇总。');
+      }
+      if (results[2].status === 'rejected') {
+        notices.push('预算接口暂不可用，预算概览未展示真实后端数据。');
+      }
+      showAlert(notices.join(' '), notices.length ? 'warning' : '');
+    } catch (e) {
+      showAlert('加载仪表盘数据失败: ' + (e.message || '未知错误'), 'error');
     }
-    if (budgetResult.status === 'rejected') {
-      notices.push('预算接口暂不可用，预算概览未展示真实后端数据。');
-    }
-    showAlert(notices.join(' '), notices.length ? 'warning' : '');
   }
 
   async function getMonthlySummary(month) {
     try {
       return await api.get('/api/statistics/summary', {
-        params: { userId: currentUser.id, month },
+        params: { userId: currentUser.id, month: month }
       });
     } catch (error) {
-      const recordsPage = await api.get('/api/records', {
-        params: { userId: currentUser.id, page: 1, size: 200, month },
+      var recordsPage = await api.get('/api/records', {
+        params: { userId: currentUser.id, page: 1, size: 200, month: month }
       });
-      return buildSummaryFromRecords(recordsPage.records || []);
+      return buildSummaryFromRecords(recordsPage.records || recordsPage || []);
     }
   }
 
   async function getRecentRecords() {
-    const pageData = await api.get('/api/records', {
-      params: { userId: currentUser.id, page: 1, size: 5 },
+    var pageData = await api.get('/api/records', {
+      params: { userId: currentUser.id, page: 1, size: 5 }
     });
-    return pageData.records || [];
+    return pageData.records || pageData || [];
   }
 
   async function getBudgetProgress(month) {
     return await api.get('/api/budget', {
-      params: { userId: currentUser.id, month },
+      params: { userId: currentUser.id, month: month }
     });
   }
 
   function buildSummaryFromRecords(records) {
-    const categoryMap = new Map();
-    const summary = records.reduce((acc, record) => {
-      const amount = Number(record.amount || record.money || 0);
+    var categoryMap = {};
+    var income = 0;
+    var expense = 0;
+
+    records.forEach(function(record) {
+      var amount = Number(record.amount || 0);
       if (record.type === 'income') {
-        acc.income += amount;
+        income += amount;
       } else {
-        acc.expense += amount;
-        categoryMap.set(record.category, (categoryMap.get(record.category) || 0) + amount);
+        expense += amount;
+        categoryMap[record.category] = (categoryMap[record.category] || 0) + amount;
       }
-      return acc;
-    }, { income: 0, expense: 0 });
+    });
+
+    var categoryStats = Object.keys(categoryMap).map(function(name) {
+      return { name: name, value: categoryMap[name] };
+    });
 
     return {
-      income: summary.income,
-      expense: summary.expense,
-      balance: summary.income - summary.expense,
-      categoryStats: Array.from(categoryMap.entries()).map(([name, value]) => ({ name, value })),
+      income: income,
+      expense: expense,
+      balance: income - expense,
+      categoryStats: categoryStats
     };
   }
 
   function renderSummary(summary) {
-    const income = Number(summary?.income || 0);
-    const expense = Number(summary?.expense || 0);
-    const balance = Number(summary?.balance ?? income - expense);
+    var income = Number(summary ? summary.income : 0) || 0;
+    var expense = Number(summary ? summary.expense : 0) || 0;
+    var balance = Number(summary ? summary.balance : null) || (income - expense);
 
-    document.getElementById('incomeValue').textContent = formatCurrency(income);
-    document.getElementById('expenseValue').textContent = formatCurrency(expense);
-    document.getElementById('balanceValue').textContent = formatCurrency(balance);
+    document.getElementById('incomeValue').textContent = window.financeApp.formatCurrency(income);
+    document.getElementById('expenseValue').textContent = window.financeApp.formatCurrency(expense);
+    document.getElementById('balanceValue').textContent = window.financeApp.formatCurrency(balance);
   }
 
   function renderExpenseChart(categoryStats) {
-    const chartData = Array.isArray(categoryStats)
-      ? categoryStats.map((item) => ({
+    if (!pieChart) return;
+
+    var chartData = [];
+    if (Array.isArray(categoryStats) && categoryStats.length > 0) {
+      chartData = categoryStats.map(function(item) {
+        return {
           name: item.name || item.category || '未分类',
-          value: Number(item.value || item.amount || item.total || 0),
-        }))
-      : [];
+          value: Number(item.value || item.amount || item.total || 0)
+        };
+      });
+    }
 
     pieChart.setOption({
       tooltip: { trigger: 'item' },
@@ -126,62 +143,58 @@
           itemStyle: {
             borderRadius: 10,
             borderColor: '#fff',
-            borderWidth: 2,
+            borderWidth: 2
           },
           label: {
-            formatter: '{b}\n{d}%',
+            formatter: '{b}\n{d}%'
           },
-          data: chartData.length ? chartData : [{ name: '暂无支出数据', value: 1 }],
-        },
-      ],
+          data: chartData.length ? chartData : [{ name: '暂无支出数据', value: 1 }]
+        }
+      ]
     });
   }
 
   function renderRecentRecords(records) {
-    if (!records.length) {
-      recordsBody.innerHTML = '';
-      recordsEmpty.hidden = false;
+    if (!records || records.length === 0) {
+      recentBills.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">暂无近期账单</td></tr>';
       return;
     }
 
-    recordsEmpty.hidden = true;
-    recordsBody.innerHTML = records.map((record) => {
-      const typeClass = record.type === 'income' ? 'income' : 'expense';
-      const typeText = record.type === 'income' ? '收入' : '支出';
-      const amountPrefix = record.type === 'income' ? '+' : '-';
+    recentBills.innerHTML = records.map(function(record) {
+      var typeClass = record.type === 'income' ? 'income' : 'expense';
+      var typeText = record.type === 'income' ? '收入' : '支出';
 
-      return `
-        <tr>
-          <td>${escapeHtml(formatDate(record.recordDate || record.createTime))}</td>
-          <td><span class="type-badge ${typeClass}">${typeText}</span></td>
-          <td>${escapeHtml(record.category || '未分类')}</td>
-          <td>${escapeHtml(record.remark || '--')}</td>
-          <td>${amountPrefix}${escapeHtml(formatCurrency(record.amount || record.money || 0))}</td>
-        </tr>
-      `;
+      return '<tr>' +
+        '<td>' + window.financeApp.escapeHtml(record.recordDate || '--') + '</td>' +
+        '<td>' + window.financeApp.escapeHtml(record.category || '未分类') + '</td>' +
+        '<td class="value ' + typeClass + '">¥' + formatNumber(record.amount || 0) + '</td>' +
+        '<td><span class="tag-' + typeClass + '">' + typeText + '</span></td>' +
+        '<td>' + window.financeApp.escapeHtml(record.remark || '--') + '</td>' +
+      '</tr>';
     }).join('');
   }
 
   function renderBudgetProgress(budgets) {
-    if (!Array.isArray(budgets) || !budgets.length) {
-      budgetSummary.innerHTML = '<div class="empty-state compact-empty"><p>当前月份暂无预算数据。</p></div>';
+    if (!Array.isArray(budgets) || budgets.length === 0) {
+      budgetSummary.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">当前月份暂无预算数据</div>';
       return;
     }
 
-    budgetSummary.innerHTML = budgets.map((item) => {
-      const progress = Math.min(Number(item.progress || 0), 100);
-      const fillClass = progress >= 100 || item.overBudget ? 'danger' : progress >= 80 ? 'warning' : 'normal';
-      return `
-        <div class="budget-item">
-          <div class="budget-header">
-            <span class="category">${escapeHtml(item.category || '未分类')}</span>
-            <span class="amount">${escapeHtml(formatCurrency(item.spent || 0))} / ${escapeHtml(formatCurrency(item.budgetAmount || 0))}</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill ${fillClass}" style="width:${progress}%"></div>
-          </div>
-        </div>
-      `;
+    budgetSummary.innerHTML = budgets.map(function(item) {
+      var amount = Number(item.budgetAmount || item.amount || 0);
+      var spent = Number(item.spent || 0);
+      var progress = amount > 0 ? Math.min((spent / amount * 100), 100) : 0;
+      var fillClass = progress >= 100 || item.overBudget ? 'danger' : progress >= 80 ? 'warning' : '';
+
+      return '<div class="budget-item">' +
+        '<div class="budget-label">' +
+          '<span>' + window.financeApp.escapeHtml(item.category || '未分类') + '</span>' +
+          '<span>¥' + formatNumber(spent) + ' / ¥' + formatNumber(amount) + '</span>' +
+        '</div>' +
+        '<div class="budget-bar">' +
+          '<div class="budget-fill ' + fillClass + '" style="width:' + progress + '%"></div>' +
+        '</div>' +
+      '</div>';
     }).join('');
   }
 
@@ -192,6 +205,10 @@
       return;
     }
     alertEl.textContent = message;
-    alertEl.className = `alert alert-${type} show`;
+    alertEl.className = 'alert ' + (type || '') + ' show';
+  }
+
+  function formatNumber(value) {
+    return Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 })();

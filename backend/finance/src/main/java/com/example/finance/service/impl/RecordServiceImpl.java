@@ -100,15 +100,18 @@ public class RecordServiceImpl implements RecordService {
             }
         }
 
-        // 3. 调用Mapper的自定义SQL：支出分类统计（用于饼图）
-        List<Map<String, Object>> categoryStats = recordMapper.expenseCategoryStats(userId, month);
+        // 3. 调用Mapper的自定义SQL：支出分类统计和收入分类统计
+        List<Map<String, Object>> expenseCategoryStats = recordMapper.expenseCategoryStats(userId, month);
+        List<Map<String, Object>> incomeCategoryStats = recordMapper.incomeCategoryStats(userId, month);
 
         // 4. 组装返回结果
         Map<String, Object> result = new HashMap<>();
         result.put("income", income); // 总收入
         result.put("expense", expense); // 总支出
         result.put("balance", income.subtract(expense)); // 结余
-        result.put("categoryStats", categoryStats); // 支出分类饼图数据
+        result.put("categoryStats", expenseCategoryStats); // 支出分类饼图数据（兼容旧版）
+        result.put("expenseCategoryStats", expenseCategoryStats); // 支出分类明细
+        result.put("incomeCategoryStats", incomeCategoryStats); // 收入分类明细
         return result;
     }
 

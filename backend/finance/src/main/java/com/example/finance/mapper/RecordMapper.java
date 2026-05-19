@@ -27,6 +27,14 @@ public interface RecordMapper extends BaseMapper<Record> {
     List<Map<String, Object>> expenseCategoryStats(@Param("userId") Long userId,
                                                    @Param("month") String month);
 
+    // 收入分类统计
+    @Select("SELECT category, SUM(amount) AS total FROM record " +
+            "WHERE user_id = #{userId} AND type = 'income' " +
+            "AND DATE_FORMAT(record_date, '%Y-%m') = #{month} " +
+            "GROUP BY category ORDER BY total DESC")
+    List<Map<String, Object>> incomeCategoryStats(@Param("userId") Long userId,
+                                                  @Param("month") String month);
+
     // 近N个月收支趋势
     @Select("SELECT DATE_FORMAT(record_date, '%Y-%m') AS month, " +
             "SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) AS income, " +
